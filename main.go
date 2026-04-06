@@ -52,14 +52,22 @@ func seedData() {
 }
 
 
-func getCustomers(w http.ResponseWriter, r *http.Request) {
-    fileServer := http.FileServer(http.Dir("./static"))
-	http.Handle("/", fileServer)
-
-	w.Header().Set("Content-Type", "application/json")
+func getCustomer(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	json.NewEncoder(w).Encode(customers)
+	id := mux.Vars(r)["id"]
+
+	for _, c := range customers {
+		if c.ID ==id {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(c)
+			return
+		} 
+	}
+	// REQUIRED: 404 if not found
+    w.WriteHeader(http.StatusNotFound)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Customer not found"})
 }
 
 
@@ -139,11 +147,11 @@ func main() {
 	fileServer := http.FileServer(http.Dir("./static"))
 	router.Handle("/", fileServer).Methods("GET")
 
-	router.HandleFunc("/customers", getCustomers).Methods("GET")
-	router.HandleFunc("/customers/{id}", getCustomers).Methods("GET")
+	router.HandleFunc("/customers", getCustomer).Methods("GET")
+	router.HandleFunc("/customers/{id}", getCustomer).Methods("GET")
 	router.HandleFunc("/customers", createCustomer).Methods("POST")
 	router.HandleFunc("/customers/{id}", updateCustomer).Methods("PUT")
-	router.HandleFunc("/deleteCustomer/{id}", deleteCustomer).Methods("DELETE")
+	router.HandleFunc("/customers/{id}", deleteCustomer).Methods("DELETE")
     
 
 	fmt.Println("Server is starting on port 3000...")
